@@ -1,0 +1,44 @@
+---
+title: "gsl lktr cpue trend fitting"
+author: "chelsey lumb"
+format: html
+editor: visual
+---
+
+## Setup
+ Jan 8 2026 
+ Data file "lktr cpue figs and coney all areas 2011 to 2023 updated.csv" copied from       
+ C:\Users\LumbC\Documents\R\gls_lktr_cpue
+ 
+ See notes about analysis options in "xyz"Notes about LKTR res doc revisions 04DEC2025.docx" in folders            
+ C:\Users\LumbC\OneDrive - DFO-MPO\CSAS\GSL SA 2024\LKTR\Notes about revisions 
+
+## Plan
+ 1. Read in data from csv file (note: only lktr in csv file)
+ 2. Exploratory plots (box plots) - CPUE by year for FIH and FIGS (IW and IE combined), npue and bpue (outliers?)
+ 3. Calculate mean cpue for npue and bpue by year for FIH and FIGS (IW and IE combined)
+ 4. Use Validation Error (Root Mean Squared Error on hold out or validation data set) to methodically determine what span is best to use for LOESS. Have to specify the degree of the polynomial to fit locally (2 for quadratic)?
+ 5. Fit LOESS regression for each group of means - npue and bpue by year for FIH and FIGS (IW and IE combined)
+ 6. Make plots to visualize results and for res doc
+ - Plot means with trend line
+ - Include 95% confidence intervals
+ 7. Save plots to files
+ 
+
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
