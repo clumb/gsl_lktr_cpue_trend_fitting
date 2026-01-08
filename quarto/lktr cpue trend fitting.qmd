@@ -24,21 +24,139 @@ editor: visual
  - Include 95% confidence intervals
  7. Save plots to files
  
-
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+## Load packages
 
 ```{r}
-1 + 1
+#| label: load packages
+#| include: false
+
+
+library(tidyverse)
+library(janitor) 
+library(here)
 ```
 
-You can add options to executable code like this
+# Load data
 
 ```{r}
+#| label: load data
+#| include: false
+
+df_original <- read.csv(here("data", "lktr cpue figs and coney all areas 2011 to 2023 updated.csv"))
+
+df <- df_original |>
+  clean_names() 
+
+
+glimpse(df)
+
+```
+
+# Theme for boxplots
+
+```{r}
+#| label: CG's theme for boxplots
+#| include: false
+
+# code originally copied from GBL bio 31JAN2022.R, lines 180-198 (theme_boxplot) 
+# from folders C:\Users\LumbC\Desktop\GBL\R\CG GBL bio code Nov 2021
+
+ theme_boxplot <-
+  theme_light()+ # can put size for text if you don't detail it below, for example: base_size= 14
+  theme(panel.grid.major = element_blank(), #or if you want colour: element_line("blue")
+        panel.grid.minor = element_blank(), #or if you want colour: element_line("blue")
+        panel.border =  element_rect(colour = "black", fill=NA, size= 1), # can add ", size= 2" for bigger border; or if no                                                                             border: element_blank()
+        panel.background = element_blank(),
+        #plot.title = element_text(size = 14, family = "Tahoma", face = "bold"),
+        #text=element_text(family = "Tahoma"), #this determine font
+        axis.title = element_text(size = 12), # if you want bold: element_text(face="bold")
+        axis.text.x = element_text(angle= -90, vjust=0.5, colour="black", size = 12, margin = margin(5, 0, 5, 0)), #margin                                                                                             order: top, right, bottom, left
+        axis.text.y = element_text(colour="black", size= 12, margin = margin(0, 5, 0, 5)),
+        axis.text.y.right = element_text(colour="black", size= 12, margin = margin(0, 5, 0, 5)), #Secondary axis if needed
+      #  axis.line = element_line(size=0.5, colour = "black"),
+        axis.line = element_line(linewidth=0.5, colour = "black"),  # updated to use linewidth() instead of size= for element_line()
+      #  axis.ticks = element_line(colour="black", size = 0.5),
+        axis.ticks = element_line(colour="black", linewidth = 0.5), # updated to use linewidth() instead of size= for element_line()
+      #  axis.rect = element_rect(linewidth=0.5, colour="black"), # copilot suggested this addtional line of code element_rect()
+  
+        legend.key.size = unit(0.5, "cm"), #change size of legend symbols
+        legend.key.width = unit(0.5,"cm"), #change width of legend symbols
+        legend.title = element_text(size = 12), #color, size, face
+        legend.text = element_text(size = 12)) #color, size, face
+ 
+ # Warning: The `size` argument of `element_line()` is deprecated as of ggplot2 3.4.0.
+# ℹ Please use the `linewidth` argument instead.
+# This warning is displayed once per session.
+# Call warnings()lifecycle::last_lifecycle_warnings() to see where this warning was generated.
+ 
+# Warning: The `size` argument of `element_rect()` is deprecated as of ggplot2 3.4.0.
+# ℹ Please use the `linewidth` argument instead.
+
+```
+
+
+# Exploratory plots
+
+
+```{r}
+#| label: Main Basin median age
+#| include: true
 #| echo: false
-2 * 2
+#| message: false
+#| warning: false
+#| fig.cap: "Medain age Main Basin" 
+
+
+# code copied from GSL LKTR trends.qmd, Age box plot (used CG's theme_boxplot) 
+# from folders C:\Users\LumbC\Documents\R Projects\GSL-LKTR-trends
+
+# for median age/box plots, didn't include years with less than n = 29 ages
+
+ main_basin_df <- df |>
+  filter(basin == "Main") |>
+  filter(net == "Commercial") |>
+  filter(year!= 2011, year!= 2012, year!= 2013, year!= 2016, year!= 2023) |>
+  mutate(year = factor(year)) |>   # remember, year has to be factor for box plot, 
+                                   # or data from all years will be plotted together   
+  filter(!is.na(age)) 
+ 
+ 
+ levels(main_basin_df$year)        # check that right years have been excluded 
+ 
+
+ # Main Basin sample sizes from commercial mesh
+
+ df |> 
+    group_by(year) |> # sample size by year
+  filter(basin == "Main") |>
+  filter(net == "Commercial") |>
+  filter(age != "NA") |> 
+  tally()
+
+# boxplot - line is median (Q2), box is interquartile range, bottom of box is 25th percentile (Q1), top of box is 75th (QQ3)
+# whiskers are 1.5*IQR, min and max
+ # https://r-graph-gallery.com/boxplot.html
+ 
+ main_basin_age_boxplot <- main_basin_df |>
+   group_by(year) |>
+  ggplot(aes(x= year, y= age))+
+  geom_boxplot(colour= "black", fill= "grey60")+
+  scale_y_continuous(name= "Age", breaks = scales::pretty_breaks(n = 10),
+                     limits = c(0, 55)) +
+  scale_x_discrete(name= "Year")+
+#  stat_summary(fun=mean, geom="point", shape=23, size=2)+  # shape = 23 is a diamond, it's the                                                              # mean, based on CG's Dolly Varden Rat                                                   # River Harvest Monitoring res doc (on desktop) # and from https://r-graph-gallery.com/269-ggplot2-boxplot-with-average-value.html
+# left mean out of gsl lktr plots for simplicity
+   
+  theme_boxplot+
+  theme(aspect.ratio = 1,
+        axis.text.x=element_text(hjust=0.05,vjust=0.2))#+
+#ggsave("length_boxplot_LKTR.jpeg",  width = 8.5, height = 8, units = "in", dpi= 900)
+ 
+ print(main_basin_age_boxplot)
+
+
+# ggsave(here("figures", "main_basin_age_boxplot.jpg"), main_basin_age_boxplot,
+#    width = 180, height = 120, units = "mm")  ```{r}
 ```
 
 The `echo: false` option disables the printing of code (only output is displayed).
