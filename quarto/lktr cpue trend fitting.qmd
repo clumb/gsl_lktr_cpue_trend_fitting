@@ -1,5 +1,5 @@
 ---
-title: "gsl lktr cpue trend fitting"
+title: "GSL CPUE exploratory visualization"
 author: "chelsey lumb"
 format: html
 editor: visual
@@ -10,7 +10,7 @@ editor: visual
  Data file "lktr cpue figs and coney all areas 2011 to 2023 updated.csv" copied from       
  C:\Users\LumbC\Documents\R\gls_lktr_cpue
  
- See notes about analysis options in "xyz"Notes about LKTR res doc revisions 04DEC2025.docx" in folders            
+ See notes about analysis options in "Notes about LKTR res doc revisions 04DEC2025.docx" in folders            
  C:\Users\LumbC\OneDrive - DFO-MPO\CSAS\GSL SA 2024\LKTR\Notes about revisions 
 
 ## Plan
@@ -24,7 +24,6 @@ editor: visual
  - Include 95% confidence intervals
  7. Save plots to files
  
-## Load packages
 
 ```{r}
 #| label: load packages
@@ -36,7 +35,6 @@ library(janitor)
 library(here)
 ```
 
-# Load data
 
 ```{r}
 #| label: load data
@@ -52,7 +50,6 @@ glimpse(df)
 
 ```
 
-# Theme for boxplots
 
 ```{r}
 #| label: CG's theme for boxplots
@@ -84,79 +81,80 @@ glimpse(df)
         legend.title = element_text(size = 12), #color, size, face
         legend.text = element_text(size = 12)) #color, size, face
  
- # Warning: The `size` argument of `element_line()` is deprecated as of ggplot2 3.4.0.
-# ℹ Please use the `linewidth` argument instead.
-# This warning is displayed once per session.
-# Call warnings()lifecycle::last_lifecycle_warnings() to see where this warning was generated.
- 
-# Warning: The `size` argument of `element_rect()` is deprecated as of ggplot2 3.4.0.
-# ℹ Please use the `linewidth` argument instead.
 
 ```
 
 
 # Exploratory plots
+## LKTR NPUE FIH IW and IE combined
 
 
 ```{r}
-#| label: Main Basin median age
+#| label: LKTR NPUE FIH IW and IE combined
 #| include: true
 #| echo: false
 #| message: false
 #| warning: false
-#| fig.cap: "Medain age Main Basin" 
+#| fig.cap: "Catch per unit effort (NPUE) plots for FIH survey in IW and IE areas combined." 
 
 
 # code copied from GSL LKTR trends.qmd, Age box plot (used CG's theme_boxplot) 
 # from folders C:\Users\LumbC\Documents\R Projects\GSL-LKTR-trends
 
-# for median age/box plots, didn't include years with less than n = 29 ages
+# modified code using CANchat GPT 4o 
 
- main_basin_df <- df |>
-  filter(basin == "Main") |>
-  filter(net == "Commercial") |>
-  filter(year!= 2011, year!= 2012, year!= 2013, year!= 2016, year!= 2023) |>
-  mutate(year = factor(year)) |>   # remember, year has to be factor for box plot, 
-                                   # or data from all years will be plotted together   
-  filter(!is.na(age)) 
- 
- 
- levels(main_basin_df$year)        # check that right years have been excluded 
- 
 
- # Main Basin sample sizes from commercial mesh
+# Filter the data based on the specified criteria
+filtered_data <- df %>%
+  filter(area %in% c("IW", "IE"),   # Filter for area IW or IE
+         survey == "FIH",           # Filter for survey FIH
+         valid_set == "Y")          # Filter for valid_set = Y
 
- df |> 
-    group_by(year) |> # sample size by year
-  filter(basin == "Main") |>
-  filter(net == "Commercial") |>
-  filter(age != "NA") |> 
-  tally()
+
+# Create a box plot using ggplot2
 
 # boxplot - line is median (Q2), box is interquartile range, bottom of box is 25th percentile (Q1), top of box is 75th (QQ3)
 # whiskers are 1.5*IQR, min and max
- # https://r-graph-gallery.com/boxplot.html
- 
- main_basin_age_boxplot <- main_basin_df |>
-   group_by(year) |>
-  ggplot(aes(x= year, y= age))+
-  geom_boxplot(colour= "black", fill= "grey60")+
-  scale_y_continuous(name= "Age", breaks = scales::pretty_breaks(n = 10),
-                     limits = c(0, 55)) +
-  scale_x_discrete(name= "Year")+
-#  stat_summary(fun=mean, geom="point", shape=23, size=2)+  # shape = 23 is a diamond, it's the                                                              # mean, based on CG's Dolly Varden Rat                                                   # River Harvest Monitoring res doc (on desktop) # and from https://r-graph-gallery.com/269-ggplot2-boxplot-with-average-value.html
-# left mean out of gsl lktr plots for simplicity
-   
-  theme_boxplot+
-  theme(aspect.ratio = 1,
-        axis.text.x=element_text(hjust=0.05,vjust=0.2))#+
-#ggsave("length_boxplot_LKTR.jpeg",  width = 8.5, height = 8, units = "in", dpi= 900)
- 
- print(main_basin_age_boxplot)
+# https://r-graph-gallery.com/boxplot.html
+
+npue_fih_iwie_boxplot <- filtered_data %>%
+
+ggplot(aes(x = factor(year), y = lktr_npue_num_per100m2_per24h)) +
+  geom_boxplot(fill = "lightblue", color = "darkblue") + # Add box plot with custom colors
+  labs(
+    x = "Year",
+    y = "NPUE (Number per 1000 m² per 24h)"
+  ) +
+  theme_minimal() + # Use a clean, minimal theme, overides theme_boxplot here 
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 14),  # Center the title and adjust size
+    axis.text.x = element_text(angle = 45, hjust = 1)   # Rotate x-axis labels for clarity
+  )
+
+ print(npue_fih_iwie_boxplot)
 
 
-# ggsave(here("figures", "main_basin_age_boxplot.jpg"), main_basin_age_boxplot,
-#    width = 180, height = 120, units = "mm")  ```{r}
+# ggsave(here("figures", "npue_fih_iwie_boxplot.jpg"), npue_fih_iwie_boxplot,
+#    width = 180, height = 120, units = "mm") 
+ 
+ 
+# Group by year and calculate mean or summary statistics for lktr_npue_num_per100m2_per24h
+summary_data <- filtered_data %>%
+  group_by(year) %>%
+  summarise(mean_npue = mean(lktr_npue_num_per100m2_per24h, na.rm = TRUE),
+            sd_npue = sd(lktr_npue_num_per100m2_per24h, na.rm = TRUE),  # Optional: Standard deviation
+            count = n())  # Optional: Number of observations per year
+
+# Visualize the data using ggplot2
+ggplot(summary_data, aes(x = year, y = mean_npue)) +
+  geom_line(color = "blue", size = 1) +  # Line plot
+  geom_point(color = "red", size = 2) + # Add points for individual years
+  geom_errorbar(aes(ymin = mean_npue - sd_npue, ymax = mean_npue + sd_npue), 
+                width = 0.2, color = "gray") + # Optional: Error bars
+  labs(x = "Year",
+       y = "Mean NPUE (Number per 1000 m² per 24h)") +
+ # scale_x_continuous(breaks = unique(filtered_data$year)) +  # Ensure every unique year is labeled
+  theme_minimal()  # Use a clean, minimal theme, overides theme_boxplot here
+
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
